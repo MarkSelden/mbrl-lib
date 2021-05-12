@@ -297,8 +297,7 @@ def test_model_env_expectation_fixed():
 
 class DummyModel(mbrl.models.Model):
     def __init__(self):
-        super().__init__()
-        self.device = torch.device(_DEVICE)
+        super().__init__(torch.device(_DEVICE))
         self.to(self.device)
 
     def forward(self, x, **kwargs):
