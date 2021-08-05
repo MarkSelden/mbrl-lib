@@ -50,6 +50,9 @@ class ModelEnv:
         self.observation_space = env.observation_space
         self.action_space = env.action_space
 
+        if hasattr(env, "exp_param_space"):
+            self.exp_param_space = env.exp_param_space
+
         self._current_obs: torch.Tensor = None
         self._propagation_method: Optional[str] = None
         self._model_indices = None
@@ -134,6 +137,8 @@ class ModelEnv:
     def render(self, mode="human"):
         pass
 
+    #TODO: How do we pass env params as the beggingin of these action sequences esp. if they are tensor. Maybe we push tensorization off
+    #   to here
     def evaluate_action_sequences(
         self,
         action_sequences: torch.Tensor,
@@ -162,6 +167,41 @@ class ModelEnv:
             initial_state, (num_particles * population_size, 1)
         ).astype(np.float32)
         self.reset(initial_obs_batch, return_as_np=False)
+        batch_size = initial_obs_batch.shape[0]
+        total_rewards = torch.zeros(batch_size, 1).to(self.device)
+        terminated = torch.zeros(batch_size, 1, dtype=bool).to(self.device)
+        for time_step in range(horizon):
+            actions_for_step = action_sequences[:, time_step, :]
+            action_batch = torch.repeat_interleave(
+                actions_for_step, num_particles, dim=0
+            )
+            _, rewards, dones, _ = self.step(action_batch, sample=True)
+            rewards[terminated] = 0
+            terminated |= dones
+            total_rewards += rewards
+
+        total_rewards = total_rewards.reshape(-1, num_particles)
+        return total_rewards.mean(dim=1)
+
+    def evaluate_parameterized_action_sequences(self, action_sequences: torch.Tensor,
+        initial_states: torch.Tensor,
+        num_particles: int,
+        ) -> torch.Tensor :
+        assert (
+                len(action_sequences.shape) == 3
+        )  # population_size, horizon, action_shape
+        assert(
+            len(initial_states.shape) == 2
+        ) #Population_size, shape
+        population_size, horizon, action_dim = action_sequences.shape
+
+        #maybe need to flatten the initial states, they expect one state they are getting different one for each in the population
+        initial_obs_batch = torch.repeat_interleave(
+            initial_states, num_particles, dim=0
+        )
+
+
+        self.reset(initial_obs_batch.numpy(), return_as_np=False)
         batch_size = initial_obs_batch.shape[0]
         total_rewards = torch.zeros(batch_size, 1).to(self.device)
         terminated = torch.zeros(batch_size, 1, dtype=bool).to(self.device)

@@ -12,6 +12,12 @@ def cartpole(act: torch.Tensor, next_obs: torch.Tensor) -> torch.Tensor:
 
     return (~termination_fns.cartpole(act, next_obs)).float().view(-1, 1)
 
+#remove the static obs from the termination argument
+def cartpole_morph(act: torch.Tensor, next_obs: torch.Tensor) -> torch.Tensor:
+    assert len(next_obs.shape) == len(act.shape) == 2
+
+    return (~termination_fns.cartpole_morph(act, next_obs)).float().view(-1, 1)
+
 
 def inverted_pendulum(act: torch.Tensor, next_obs: torch.Tensor) -> torch.Tensor:
     assert len(next_obs.shape) == len(act.shape) == 2

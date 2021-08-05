@@ -107,7 +107,10 @@ def complete_agent_cfg(
         agent_cfg.action_lb = env.action_space.low.tolist()
     if "action_ub" in agent_cfg.keys() and "action_ub" not in agent_cfg:
         agent_cfg.action_ub = env.action_space.high.tolist()
-
+    if "environment_params_lb" in agent_cfg.keys() and "environment_params" not in agent_cfg:
+        agent_cfg.environment_params_lb = env.exp_param_space.low.tolist()
+    if "environment_params_lb" in agent_cfg.keys() and "environment_params" not in agent_cfg:
+        agent_cfg.environment_params_ub = env.exp_param_space.high.tolist()
     return agent_cfg
 
 
