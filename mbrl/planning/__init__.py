@@ -5,6 +5,7 @@
 from .core import Agent, RandomAgent, complete_agent_cfg, load_agent
 from .trajectory_opt import (
     CEMOptimizer,
+    MPPIOptimizer,
     TrajectoryOptimizer,
     TrajectoryOptimizerAgent,
     create_trajectory_optim_agent_for_model,
@@ -15,6 +16,7 @@ from.marks_optimizer import MarksOptimizer, RandomMorphingAgent, MarksOptimizerA
 __all__ = [
     "Agent",
     "CEMOptimizer",
+    "MPPIOptimizer",
     "RandomAgent",
     "TrajectoryOptimizer",
     "TrajectoryOptimizerAgent",
