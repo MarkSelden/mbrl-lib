@@ -66,11 +66,12 @@ class CartPoleEnv(gym.Env):
         self.masscart = 1.0
         self.masspole = 0.1
         self.total_mass = self.masspole + self.masscart
-        self.length = 0.5  # actually half the pole's length
+        self.length = 2.5 # actually half the pole's length
         self.polemass_length = self.masspole * self.length
         self.force_mag = 10.0
         self.tau = 0.02  # seconds between state updates
         self.kinematics_integrator = "euler"
+        self.target = (0,5)
 
         # Angle at which to fail the episode
         self.theta_threshold_radians = 12 * 2 * math.pi / 360
@@ -140,11 +141,11 @@ class CartPoleEnv(gym.Env):
         )
 
         if not done:
-            reward = 1.0
+            reward = self.PETS_reward_func(action)
         elif self.steps_beyond_done is None:
             # Pole just fell!
             self.steps_beyond_done = 0
-            reward = 1.0
+            reward = 0
         else:
             if self.steps_beyond_done == 0:
                 logger.warn(
@@ -232,3 +233,16 @@ class CartPoleEnv(gym.Env):
         if self.viewer:
             self.viewer.close()
             self.viewer = None
+
+    def PETS_reward_func(self, action):
+        # calculate the distance between the point we set and the
+        pos, vel, ang, ang_vel = self.state
+        ang = np.pi/2 - ang
+        target = self.target
+        hyp = 2 * self.length
+        pole_edge  = (hyp * np.cos(ang) + pos, hyp * np.sin(ang))
+        target_distance = math.dist(target, pole_edge)
+        reward = -target_distance - 0.01 * np.sum(np.square(action))
+        return reward
+
+

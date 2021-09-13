@@ -1,3 +1,4 @@
+import os
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,9 +10,9 @@ import mbrl.models as models
 import mbrl.planning as planning
 import mbrl.util.common as common_util
 import mbrl.util as util
-import pybullet_envs
 import gym
 import mbrl.env.cartpole_continuous_morph
+import mbrl.util.logger
 
 mpl.rcParams.update({"font.size": 16})
 
@@ -34,7 +35,7 @@ term_fn = termination_fns.cartpole_morph
 reward_fn = reward_fns.cartpole_morph
 
 trial_length = 200
-num_trials = 10
+num_trials = 100
 ensemble_size = 5
 
 # Everything with "???" indicates an option with a missing value.
@@ -81,7 +82,7 @@ replay_buffer = util.common.create_replay_buffer(
 
 util.common.rollout_agent_trajectories(
     env,
-    100,
+    1,
     planning.RandomMorphingAgent(env),
     {},
     replay_buffer=replay_buffer,
@@ -95,31 +96,31 @@ model_env = models.ModelEnv(
 
 agent_cfg = omegaconf.OmegaConf.create({
     # this class evaluates many trajectories and picks the best one
-    "_target_": "mbrl.planning.MarksOptimizerAgent",
+    "_target_": "mbrl.planning.OLOptimizerAgent",
     "planning_horizon": 10,
-    "replan_freq": 5,
+    "replan_freq": 1,
     "verbose": False,
     "action_lb": "???",
     "action_ub": "???",
     "environment_params_lb": "???",
     "environment_params_ub": "???",
     # this is the optimizer to generate and choose a trajectory
-    "optimizer_cfg": {
-        "_target_": "mbrl.planning.MarksCEMOptimizer",
-        "num_iterations": 5,
+    "ol_optimizer_cfg": {
+        "_target_": "mbrl.planning.MorphCEMOptimizer",
+        "num_iterations": 10,
         "elite_ratio": 0.1,
-        "population_size": 1,
+        "population_size": 20,
         "alpha": 0.1,
         "device": device,
         "lower_bound": "???",
         "upper_bound": "???",
         "return_mean_elites": True
     },
-    "optimizer_cfg2": {
+    "il_optimizer_cfg": {
         "_target_": "mbrl.planning.CEMOptimizer",
-        "num_iterations": 5,
+        "num_iterations": 10,
         "elite_ratio": 0.1,
-        "population_size": 1,
+        "population_size": 20,
         "alpha": 0.1,
         "device": device,
         "lower_bound": "???",
@@ -128,7 +129,7 @@ agent_cfg = omegaconf.OmegaConf.create({
     }
 })
 
-agent = planning.create_mark_trajectory_optim_agent_for_model(
+agent = planning.create_morph_trajectory_optim_agent_for_model(
     model_env,
     agent_cfg,
     num_particles=15
@@ -160,8 +161,18 @@ def update_axes(_axs, _frame, _text, _trial, _steps_trial, _all_rewards, force_u
 model_trainer = models.ModelTrainer(dynamics_model, optim_lr=1e-3, weight_decay=5e-5)
 
 # Create visualization objects
-fig, axs = plt.subplots(1, 2, figsize=(14, 3.75), gridspec_kw={"width_ratios": [1, 1]})
-ax_text = axs[0].text(300, 50, "")
+#fig, axs = plt.subplots(1, 2, figsize=(14, 3.75), gridspec_kw={"width_ratios": [1, 1]})
+#ax_text = axs[0].text(300, 50, "")
+
+#Set up logger
+logger_name = 'morph-results-0 Cartpole-toy'
+log_format =  [
+    ("env_step", "S", "int"),
+    ("episode_reward", "R", "float"),
+]
+work_dir = os.getcwd()
+logger = mbrl.util.Logger(work_dir)
+logger.register_group(logger_name, log_format, color="green")
 
 # Main PETS loop
 all_rewards = [0]
@@ -172,15 +183,12 @@ for trial in range(num_trials):
     done = False
     total_reward = 0.0
     steps_trial = 0
-    update_axes(axs, env.render(mode="rgb_array"), ax_text, trial, steps_trial, all_rewards)
+    #update_axes(axs, env.render(mode="rgb_array"), ax_text, trial, steps_trial, all_rewards)
     while not done:
         # --------------- Model Training -----------------
         if steps_trial == 0:
             #Add the reset for the planning of agent bodies in here
-
-
-
-
+#            print('training model')
             dynamics_model.update_normalizer(replay_buffer.get_all())  # update normalizer stats
 
             dataset_train, dataset_val = replay_buffer.get_iterators(
@@ -192,21 +200,24 @@ for trial in range(num_trials):
                 bootstrap_permutes=False,  # build bootstrap dataset using sampling with replacement
             )
 
+            #TODO:: Retraining the model fully every time???
+
             model_trainer.train(
-                dataset_train, dataset_val=dataset_val, num_epochs=50, patience=50, callback=train_callback)
+                dataset_train, dataset_val=dataset_val, num_epochs=20, patience=5, callback=train_callback)
+
+            agent.reset_action_count()
 
         # --- Doing env step using the agent and adding to model dataset ---
         next_obs, reward, done, _ = common_util.morph_step_env_and_add_to_buffer(env, obs, agent, {}, replay_buffer)
 
-        update_axes(axs, env.render(mode="rgb_array"), ax_text, trial, steps_trial, all_rewards)
+        #update_axes(axs, env.render(mode="rgb_array"), ax_text, trial, steps_trial, all_rewards)
 
         obs = next_obs
         total_reward += reward
         steps_trial += 1
-
         if steps_trial == trial_length:
             break
+    logger.log_data(logger_name, {"env_step": steps_trial, "episode_reward": total_reward},)
 
-    all_rewards.append(total_reward)
 
-update_axes(axs, env.render(mode="rgb_array"), ax_text, trial, steps_trial, all_rewards, force_update=True)
+#update_axes(axs, env.render(mode="rgb_array"), ax_text, trial, steps_trial, all_rewards, force_update=True)

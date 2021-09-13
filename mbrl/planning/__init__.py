@@ -11,8 +11,7 @@ from .trajectory_opt import (
     create_trajectory_optim_agent_for_model,
 )
 
-from.marks_optimizer import MarksOptimizer, RandomMorphingAgent, MarksOptimizerAgent, MarksCEMOptimizer, create_mark_trajectory_optim_agent_for_model
-
+from.marks_optimizer import *
 __all__ = [
     "Agent",
     "CEMOptimizer",

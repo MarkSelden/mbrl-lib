@@ -26,7 +26,7 @@ class RandomMorphingAgent(Agent):
 
         return self.env.action_space.sample()
 
-class MarksOptimizer(TrajectoryOptimizer):
+class MorphOptimizer(TrajectoryOptimizer):
     """Class for using generic optimizers on trajectory optimization problems.
 
     This is a convenience class that sets up optimization problem for trajectories, given only
@@ -121,41 +121,46 @@ class MarksOptimizer(TrajectoryOptimizer):
 #######################################
 
 
-class MarksOptimizerAgent(Agent):
+class OLOptimizerAgent(Agent):
+    #Optimizer agent which utilizes multiple optimizers, one for the inner loop, one for the outer-loop
     def __init__(
             self,
-            optimizer_cfg: omegaconf.DictConfig,
-            optimizer_cfg2: omegaconf.DictConfig,
+            ol_optimizer_cfg: omegaconf.DictConfig,
+            il_optimizer_cfg: omegaconf.DictConfig,
             action_lb: Sequence[float],
             action_ub: Sequence[float],
             environment_params_lb: Sequence[float],
             environment_params_ub: Sequence[float],
             initial_planning_horizon= 1,
-            planning_horizon: int = 1,
+            planning_horizon: int = 10,
             replan_freq: int = 1,
             verbose: bool = False,
     ):
         self.exp_param_size = len(environment_params_lb)
-        self.first_optimizer = MarksOptimizer(
-            optimizer_cfg,
+
+
+
+
+        self.first_optimizer = MorphOptimizer(
+            ol_optimizer_cfg,
             np.array(action_lb),
             np.array(action_ub),
             np.array(environment_params_lb),
             np.array(environment_params_ub),
-            planning_horizon=initial_planning_horizon,
-            replan_freq=replan_freq,
+            planning_horizon,
+            replan_freq
         )
 
-
         self.optimizer = TrajectoryOptimizer(
-            optimizer_cfg2,
+            il_optimizer_cfg,
             np.array(action_lb),
             np.array(action_ub),
             planning_horizon=planning_horizon,
             replan_freq=replan_freq,
         )
+
         self.optimizer_args = {
-            "optimizer_cfg": optimizer_cfg,
+            "optimizer_cfg": il_optimizer_cfg,
             "action_lb": np.array(action_lb),
             "action_ub": np.array(action_ub),
         }
@@ -239,7 +244,7 @@ class MarksOptimizerAgent(Agent):
         action = self.actions_to_use.pop(0)
 
         if self.verbose:
-            print(f"Planning time: {plan_time:.3f}")
+           print(f"Planning time: {plan_time:.3f}")
 
         self.action_count += 1
         return env_params, action
@@ -266,9 +271,12 @@ class MarksOptimizerAgent(Agent):
         plan = self.optimizer.optimize(trajectory_eval_fn)
         return plan
 
+    def reset_action_count(self):
+        self.action_count = 0
 
 
-class MarksCEMOptimizer(Optimizer):
+
+class MorphCEMOptimizer(Optimizer):
     """Implements the Cross-Entropy Method optimization algorithm.
 
     A good description of CEM [1] can be found at https://arxiv.org/pdf/2008.06389.pdf. This
@@ -409,11 +417,11 @@ class MarksCEMOptimizer(Optimizer):
 
 
 ######
-def create_mark_trajectory_optim_agent_for_model(
+def create_morph_trajectory_optim_agent_for_model(
     model_env: mbrl.models.ModelEnv,
     agent_cfg: omegaconf.DictConfig,
     num_particles: int = 1,
-) -> MarksOptimizerAgent:
+) -> OLOptimizerAgent:
     """Utility function for creating a trajectory optimizer agent for a model environment.
 
     This is a convenience function for creating a :class:`TrajectoryOptimizerAgent`,
