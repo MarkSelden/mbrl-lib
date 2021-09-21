@@ -30,7 +30,7 @@ def PETS_cartpole_morph(act: torch.Tensor, next_obs: torch.Tensor) -> torch.Tens
     pole_edge  = np.array([hyp * np.cos(ang) + pos, hyp * np.sin(ang)])
     target_distance = np.sqrt((pole_edge[0] - target[0])**2 + (pole_edge[1] - target[1])**2)
     reward = target_distance * -1 + (-0.01 * np.array(act).flatten()**2)
-    return torch.tensor(np.reshape(reward, newshape=(300,1)), device=dev)
+    return torch.tensor(np.reshape(reward, newshape=(len(reward),1)), device=dev)
 
 def cartpole_morph(act: torch.Tensor, next_obs: torch.Tensor) -> torch.Tensor:
     assert len(next_obs.shape) == len(act.shape) == 2
