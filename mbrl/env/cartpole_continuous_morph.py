@@ -123,6 +123,9 @@ class CartPoleMorphEnv(gym.Env):
         self.masspole = params[1]
         self.length = params[2]
 
+    def get_exp_params(self):
+        return (self.mass_cart, self.masspole, self.length)
+
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]

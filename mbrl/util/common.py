@@ -13,6 +13,7 @@ import omegaconf
 import mbrl.models
 import mbrl.planning
 import mbrl.types
+import mbrl
 
 from .replay_buffer import (
     BootstrapIterator,

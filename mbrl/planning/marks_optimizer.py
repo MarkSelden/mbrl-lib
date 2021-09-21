@@ -59,9 +59,9 @@ class MorphOptimizer(TrajectoryOptimizer):
             action_ub: np.ndarray,
             environmental_params_lb: np.ndarray,
             environmental_params_ub: np.ndarray,
-            planning_horizon: int,
             replan_freq: int = 1,
             keep_last_solution: bool = True,
+            planning_horizon = 10,
     ):
         lower_bounds =  np.tile(action_lb, (planning_horizon, 1)).tolist()
         upper_bounds =  np.tile(action_ub, (planning_horizon, 1)).tolist()
@@ -76,7 +76,7 @@ class MorphOptimizer(TrajectoryOptimizer):
                 .to(optimizer_cfg.device)
         )
         self.initial_params = (
-            ((torch.tensor(environmental_params_lb) + torch.tensor(environmental_params_lb)) / 2)
+            ((torch.tensor(environmental_params_lb) + torch.tensor(environmental_params_ub)) / 2)
                 .float()
                 .to(optimizer_cfg.device)
         )
@@ -131,7 +131,7 @@ class OLOptimizerAgent(Agent):
             action_ub: Sequence[float],
             environment_params_lb: Sequence[float],
             environment_params_ub: Sequence[float],
-            initial_planning_horizon= 1,
+            initial_planning_horizon= 15,
             planning_horizon: int = 10,
             replan_freq: int = 1,
             verbose: bool = False,
@@ -147,7 +147,7 @@ class OLOptimizerAgent(Agent):
             np.array(action_ub),
             np.array(environment_params_lb),
             np.array(environment_params_ub),
-            planning_horizon,
+            initial_planning_horizon,
             replan_freq
         )
 
@@ -170,7 +170,7 @@ class OLOptimizerAgent(Agent):
         self.actions_to_use: List[np.ndarray] = []
         self.replan_freq = replan_freq
         self.verbose = verbose
-        self.action_count = 0
+        self.new_morph = True
 
     def set_trajectory_eval_fn(
             self, trajectory_eval_fn: mbrl.types.TrajectoryEvalFnType
@@ -218,7 +218,7 @@ class OLOptimizerAgent(Agent):
             )
         plan_time = 0.0
         if not self.actions_to_use:  # re-plan is necessary
-            if self.action_count == 0:
+            if self.new_morph:
                 def trajectory_eval_fn(env_params, action_sequences):
                     # take the environmental parameters out of the action sequence and stich them to the initial observation for the dynamics model.
 
@@ -229,6 +229,7 @@ class OLOptimizerAgent(Agent):
                 plan_time = time.time() - start_time
 
                 self.actions_to_use.extend([a for a in plan[: self.replan_freq]])
+                self.new_morph = False
             else:
                 def trajectory_eval_fn(action_sequences):
                     # take the environmental parameters out of the action sequence and stich them to the initial observation for the dynamics model.
@@ -246,7 +247,6 @@ class OLOptimizerAgent(Agent):
         if self.verbose:
            print(f"Planning time: {plan_time:.3f}")
 
-        self.action_count += 1
         return env_params, action
 
     def plan(self, obs: np.ndarray, **_kwargs) -> np.ndarray:
@@ -271,8 +271,8 @@ class OLOptimizerAgent(Agent):
         plan = self.optimizer.optimize(trajectory_eval_fn)
         return plan
 
-    def reset_action_count(self):
-        self.action_count = 0
+    def morph_again(self):
+        self.new_morph = True
 
 
 
@@ -439,7 +439,6 @@ def create_morph_trajectory_optim_agent_for_model(
 
     """
     complete_agent_cfg(model_env, agent_cfg)
-
     agent = hydra.utils.instantiate(agent_cfg)
 
     #boom
