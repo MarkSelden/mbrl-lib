@@ -174,7 +174,7 @@ class Model(nn.Module, abc.ABC):
 
     def load(self, path: Union[str, pathlib.Path]):
         """Loads the model from the given path."""
-        self.load_state_dict(torch.load(path))
+        self.load_state_dict(torch.load(path,  map_location=torch.device('cpu')))
 
 
 # ---------------------------------------------------------------------------
