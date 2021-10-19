@@ -69,13 +69,14 @@ class CartPoleMorphEnv(gym.Env):
         self.total_mass = self.masspole + self.masscart
         self.length = 0.5  # actually half the pole's length
         self.polemass_length = self.masspole * self.length
-        self.force_mag = 10.0
+        self.force_mag = 20.0
         self.tau = 0.02  # seconds between state updates
         self.kinematics_integrator = "euler"
 
         # Angle at which to fail the episode
         self.theta_threshold_radians = 12 * 2 * math.pi / 360
         self.x_threshold = 2.4
+        self.target = (0,5)
 
         # Angle limit set to 2 * theta_threshold_radians so failing observation
         # is still within bounds.
@@ -108,17 +109,22 @@ class CartPoleMorphEnv(gym.Env):
         act_high = np.array((1,), dtype=np.float32)
         self.action_space = spaces.Box(-act_high, act_high, dtype=np.float32)
         self.observation_space = spaces.Box(low, high, dtype=np.float32)
-        self.exp_param_space = spaces.Box(np.array([0.1, 0.1, 0.1]), np.array([3.0, 1.0, 2.0]))
+        self.exp_param_space = spaces.Box(np.array([0.1, 0.1, 0.1]), np.array([20, 20, 20]))
         self.seed()
         self.viewer = None
         self.state = None
 
         self.steps_beyond_done = None
+        self.time_step = 0
+        self.end_time_step = 100
 
     def set_exp_params(self, params: np.ndarray):
         self.mass_cart = params[0]
         self.masspole = params[1]
         self.length = params[2]
+
+    def get_exp_params(self):
+        return (self.mass_cart, self.masspole, self.length)
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -154,15 +160,10 @@ class CartPoleMorphEnv(gym.Env):
 
         self.state = (x, x_dot, theta, theta_dot)
 
-        done = bool(
-            x < -self.x_threshold
-            or x > self.x_threshold
-            or theta < -self.theta_threshold_radians
-            or theta > self.theta_threshold_radians
-        )
+        done = self.time_step > self.end_time_step
 
         if not done:
-            reward = 1.0
+            reward = self.PETS_reward_func(action)
         elif self.steps_beyond_done is None:
             # Pole just fell!
             self.steps_beyond_done = 0
@@ -177,12 +178,13 @@ class CartPoleMorphEnv(gym.Env):
                 )
             self.steps_beyond_done += 1
             reward = 0.0
-
+        self.time_step += 1
         return np.append(np.array([self.masscart, self.masspole, self.length]), np.array(self.state)), reward, done, {}
 
     def reset(self):
         self.state = self.np_random.uniform(low=-0.05, high=0.05, size=(4,))
         self.steps_beyond_done = None
+        self.time_step = 0
         return np.append(np.array([self.masscart, self.masspole, self.length]), np.array(self.state))
 
     def render(self, mode="human"):
@@ -254,3 +256,14 @@ class CartPoleMorphEnv(gym.Env):
         if self.viewer:
             self.viewer.close()
             self.viewer = None
+
+    def PETS_reward_func(self, action):
+        # calculate the distance between the point we set and the
+        pos, vel, ang, ang_vel = self.state
+        ang = np.pi/2 - ang
+        target = self.target
+        hyp = 2 * self.length
+        pole_edge  = (hyp * np.cos(ang) + pos, hyp * np.sin(ang))
+        target_distance = math.dist(target, pole_edge)
+        reward = -target_distance - 0.01 * np.sum(np.square(action))
+        return reward
