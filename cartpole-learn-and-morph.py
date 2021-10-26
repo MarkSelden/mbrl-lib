@@ -25,10 +25,10 @@ def main(cfg: DictConfig):
 
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
-    seed = 16
+    seed = int(cfg.seed)
     env = mbrl.env.cartpole_continuous_morph.CartPoleMorphEnv()
     env.seed(seed)
-    rng = np.random.default_rng(seed=0)
+    rng = np.random.default_rng(seed=seed)
     #I believe the generator is used for random sampling
     generator = torch.Generator(device=device)
     generator.manual_seed(seed)
@@ -141,7 +141,7 @@ def main(cfg: DictConfig):
             if steps_trial == 0:
                 #Add the reset for the planning of agent bodies in here
     #            print('training model')
-                if trial % 5 == 0:
+                if trial % cfg.gen_len == 0:
                     #save the last model of the generation
                     dynamics_model.save(cwd)
                 dynamics_model.update_normalizer(replay_buffer.get_all())  # update normalizer stats
@@ -158,7 +158,7 @@ def main(cfg: DictConfig):
                     dataset_train, dataset_val=dataset_val, num_epochs=cfg.dynamics_model.num_epochs, patience=cfg.dynamics_model.patience, callback=train_callback)
 
                 #check if its time to create a new morphology, mod 5?
-                if trial % 5 ==0:
+                if trial % cfg.gen_len ==0:
                     agent.morph_again()
 
 
