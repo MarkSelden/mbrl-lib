@@ -42,7 +42,7 @@ def main(cfg: DictConfig):
     reward_fn = reward_fns.PETS_cartpole_morph
     #reward_fn = reward_fns.cartpole_morph
     trial_length = 200
-    num_trials = 100
+    num_trials = 1000
     cfg.dynamics_model.model.device = device
     cfg.overrides.trial_length = trial_length
     cfg.overrides.num_steps = num_trials * trial_length
@@ -106,8 +106,8 @@ def main(cfg: DictConfig):
     model_trainer = models.ModelTrainer(dynamics_model, optim_lr=1e-3, weight_decay=5e-5)
 
     # Create visualization objects
-    #fig, axs = plt.subplots(1, 2, figsize=(14, 3.75), gridspec_kw={"width_ratios": [1, 1]})
-    #ax_text = axs[0].text(300, 50, "")
+    fig, axs = plt.subplots(1, 2, figsize=(14, 3.75), gridspec_kw={"width_ratios": [1, 1]})
+    ax_text = axs[0].text(300, 50, "")
 
     #Set up logger
     now = datetime.now()
@@ -123,18 +123,19 @@ def main(cfg: DictConfig):
         ("pole_length", "L", "float")
 
     ]
+    logger = mbrl.util.Logger(cwd)
+    logger.register_group(logger_name, log_format, color="green")
 
     # Main PETS loop
     all_rewards = [0]
     for trial in range(num_trials):
-        print(env.get_exp_params())
         obs = env.reset()
         agent.reset()
 
         done = False
         total_reward = 0.0
         steps_trial = 0
-        #update_axes(axs, env.render(mode="rgb_array"), ax_text, trial, steps_trial, all_rewards)
+        update_axes(axs, env.render(mode="rgb_array"), ax_text, trial, steps_trial, all_rewards)
         while not done:
             # --------------- Model Training -----------------
             if steps_trial == 0:
@@ -176,6 +177,8 @@ def main(cfg: DictConfig):
             if steps_trial == trial_length:
                 break
         cart_m, pole_m, pole_l = env.get_exp_params()
+        logger.log_data(logger_name, {"env_step": steps_trial, "episode_reward": total_reward, "cart_mass": cart_m, "pole_mass": pole_m, "pole_length": pole_l},)
+
 
 
 

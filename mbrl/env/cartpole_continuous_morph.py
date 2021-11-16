@@ -62,6 +62,7 @@ class CartPoleMorphEnv(gym.Env):
 
     metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 50}
 
+    # TODO: Add the spaces for design parameters  to DOCS
     def __init__(self):
         self.gravity = 9.8
         self.masscart = 1.0
@@ -88,7 +89,7 @@ class CartPoleMorphEnv(gym.Env):
                 2.0,
                 self.x_threshold * 2,
                 np.finfo(np.float32).max,
-                self.theta_threshold_radians * 2,
+                np.pi,
                 np.finfo(np.float32).max,
             ],
             dtype=np.float32,
@@ -100,7 +101,7 @@ class CartPoleMorphEnv(gym.Env):
                 0.1,
                 -self.x_threshold * 2,
                 -np.finfo(np.float32).max,
-                -self.theta_threshold_radians * 2,
+                -np.pi,
                 -np.finfo(np.float32).max,
             ],
             dtype=np.float32,
@@ -118,11 +119,17 @@ class CartPoleMorphEnv(gym.Env):
         self.time_step = 0
         self.end_time_step = 100
 
+    ##TODO:: Add to  Docs.
+    #Function to reset the morphology space or dynamic parameters of the experimental environment
     def set_exp_params(self, params: np.ndarray):
         self.mass_cart = params[0]
         self.masspole = params[1]
         self.length = params[2]
+        self.polemass_length = self.masspole * self.length
+        self.total_mass = self.masspole + self.masscart
 
+    #TODO: Add to Docs
+    # Function to return design paramets which have been set or initialized.
     def get_exp_params(self):
         return (self.mass_cart, self.masspole, self.length)
 
@@ -130,6 +137,7 @@ class CartPoleMorphEnv(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
+    #TODO: Add changes to DOCUMENTATION We now return exp params as part of the observation and state.
     def step(self, action):
         action = action.squeeze()
         x, x_dot, theta, theta_dot = self.state
@@ -182,14 +190,14 @@ class CartPoleMorphEnv(gym.Env):
         return np.append(np.array([self.masscart, self.masspole, self.length]), np.array(self.state)), reward, done, {}
 
     def reset(self):
-        self.state = self.np_random.uniform(low=-0.05, high=0.05, size=(4,))
+        self.state = (0, 0, np.pi, 0)
         self.steps_beyond_done = None
         self.time_step = 0
         return np.append(np.array([self.masscart, self.masspole, self.length]), np.array(self.state))
 
     def render(self, mode="human"):
         screen_width = 600
-        screen_height = 400
+        screen_height = 800
 
         world_width = self.x_threshold * 2
         scale = screen_width / world_width
