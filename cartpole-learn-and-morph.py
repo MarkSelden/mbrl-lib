@@ -123,12 +123,11 @@ def main(cfg: DictConfig):
         ("pole_length", "L", "float")
 
     ]
-    logger = mbrl.util.Logger(cwd)
-    logger.register_group(logger_name, log_format, color="green")
 
     # Main PETS loop
     all_rewards = [0]
     for trial in range(num_trials):
+        print(env.get_exp_params())
         obs = env.reset()
         agent.reset()
 
@@ -141,9 +140,6 @@ def main(cfg: DictConfig):
             if steps_trial == 0:
                 #Add the reset for the planning of agent bodies in here
     #            print('training model')
-                if trial % 5 == 0:
-                    #save the last model of the generation
-                    dynamics_model.save(cwd)
                 dynamics_model.update_normalizer(replay_buffer.get_all())  # update normalizer stats
 
                 dataset_train, dataset_val = replay_buffer.get_iterators(
@@ -163,6 +159,8 @@ def main(cfg: DictConfig):
 
 
 
+
+
             # --- Doing env step using the agent and adding to model dataset ---
             next_obs, reward, done, _ = common_util.morph_step_env_and_add_to_buffer(env, obs, agent, {}, replay_buffer)
 
@@ -171,10 +169,10 @@ def main(cfg: DictConfig):
             obs = next_obs
             total_reward += reward
             steps_trial += 1
+            env.render(mode="rgb_array")
             if steps_trial == trial_length:
                 break
         cart_m, pole_m, pole_l = env.get_exp_params()
-        logger.log_data(logger_name, {"env_step": steps_trial, "episode_reward": total_reward, "cart_mass": cart_m, "pole_mass": pole_m, "pole_length": pole_l},)
 
 
 
