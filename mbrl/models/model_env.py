@@ -217,3 +217,102 @@ class ModelEnv:
 
         total_rewards = total_rewards.reshape(-1, num_particles)
         return total_rewards.mean(dim=1)
+
+"""
+class perfect_model_env(ModelEnv):
+
+    def __init__(
+        self,
+        env: gym.Env,
+        termination_fn: mbrl.types.TermFnType,
+        reward_fn: Optional[mbrl.types.RewardFnType] = None,
+        generator: Optional[torch.Generator] = None,
+    ):
+        self.termination_fn = termination_fn
+        self.reward_fn = reward_fn
+        self.device = model.device
+
+        self.observation_space = env.observation_space
+        self.action_space = env.action_space
+
+        if hasattr(env, "exp_param_space"):
+            self.exp_param_space = env.exp_param_space
+
+        self._current_obs: torch.Tensor = None
+        self._propagation_method: Optional[str] = None
+        self._model_indices = None
+        if generator:
+            self._rng = generator
+        else:
+            self._rng = torch.Generator(device=self.device)
+        self._return_as_np = True
+        self._envs = []
+
+
+    def reset(
+        self,
+        initial_obs_batch: np.ndarray,
+        return_as_np: bool = True,
+    ) -> mbrl.types.TensorType:
+        Resets the model environment.
+
+        Args:
+            initial_obs_batch (np.ndarray): a batch of initial observations. One episode for
+                each observation will be run in parallel. Shape must be ``B x D``, where
+                ``B`` is batch size, and ``D`` is the observation dimension.
+            return_as_np (bool): if ``True``, this method and :meth:`step` will return
+                numpy arrays, otherwise it returns torch tensors in the same device as the
+                model. Defaults to ``True``.
+
+        Returns:
+            (torch.Tensor or np.ndarray): the initial observation in the type indicated
+            by ``return_as_np``.
+        
+        assert len(initial_obs_batch.shape) == 2  # batch, obs_dim
+
+        for i in initial_obs_batch:
+            new_env = self.env().reset()
+            if hasattr(self, "exp_param_space"):
+                new_env.set_exp_params(i[:self.exp_param_space.shape()[0]])
+                i = i[self.exp_param_space.shape()[0]:]
+            new_env().state =
+
+
+        self._return_as_np = return_as_np
+        if self._return_as_np:
+            return self._current_obs.cpu().numpy()
+        return self._current_obs
+
+    def step(
+        self, actions: mbrl.types.TensorType, sample: bool = False
+    ) -> Tuple[mbrl.types.TensorType, mbrl.types.TensorType, np.ndarray, Dict]:
+        Steps the model environment with the given batch of actions.
+
+        Args:
+            actions (torch.Tensor or np.ndarray): the actions for each "episode" to rollout.
+                Shape must be ``B x A``, where ``B`` is the batch size (i.e., number of episodes),
+                and ``A`` is the action dimension. Note that ``B`` must correspond to the
+                batch size used when calling :meth:`reset`. If a np.ndarray is given, it's
+                converted to a torch.Tensor and sent to the model device.
+            sample (bool): if ``True`` model predictions are stochastic. Defaults to ``False``.
+
+        Returns:
+            (tuple): contains the predicted next observation, reward, done flag and metadata.
+            The done flag is computed using the termination_fn passed in the constructor.
+        
+    """
+"""
+    def evaluate_action_sequences(
+        self,
+        action_sequences: torch.Tensor,
+        initial_state: np.ndarray,
+        num_particles: int,
+    ) -> torch.Tensor:
+
+
+    def evaluate_parameterized_action_sequences(self, action_sequences: torch.Tensor,
+        initial_states: torch.Tensor,
+        num_particles: int,
+        ) -> torch.Tensor :
+
+"""

@@ -32,14 +32,14 @@ overrides:
     seed: 0
 agent:
     _target_: mbrl.planning.OLOptimizerAgent
-    planning_horizon: 1
+    planning_horizon: 15
     replan_freq: 1
     verbose: False
     action_lb: ???
     action_ub: ???
     environment_params_lb: ???
     environment_params_ub: ???
-    initial_planning_horizon: 5
+    initial_planning_horizon: 15
 
     # this is the optimizer to generate and choose a trajectory
     ol_optimizer_cfg:

@@ -13,7 +13,7 @@ import mbrl.planning as planning
 import mbrl.util.common as common_util
 import mbrl.util as util
 import gym
-import mbrl.env.cartpole_continuous_morph
+import mbrl.env.cartpole_continuous
 import mbrl.util.logger
 import mbrl
 from datetime import datetime
@@ -26,7 +26,7 @@ def main(cfg: DictConfig):
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
     seed = int(cfg.seed)
-    env = mbrl.env.cartpole_continuous_morph.CartPoleMorphEnv()
+    env = mbrl.env.cartpole_continuous.CartPoleMorphEnv()
     env.seed(seed)
     rng = np.random.default_rng(seed=seed)
     #I believe the generator is used for random sampling
@@ -35,14 +35,15 @@ def main(cfg: DictConfig):
     obs_shape = env.observation_space.shape
     act_shape = env.action_space.shape
     exp_param_space = env.exp_param_space
+    env.set_exp_params([1.0, 0.1, 0.5])
 
     # This functions allows the model to evaluate the true rewards given an observation
     # This function allows the model to know if an observation should make the episode end
     term_fn = termination_fns.cartpole_morph
     reward_fn = reward_fns.PETS_cartpole_morph
     #reward_fn = reward_fns.cartpole_morph
-    trial_length = 200
-    num_trials = 1000
+    trial_length = 100
+    num_trials = 500
     cfg.dynamics_model.model.device = device
     cfg.overrides.trial_length = trial_length
     cfg.overrides.num_steps = num_trials * trial_length
@@ -61,7 +62,7 @@ def main(cfg: DictConfig):
     util.common.rollout_agent_trajectories(
         env,
         1,
-        planning.RandomMorphingAgent(env),
+        planning.RandomAgent(env),
         {},
         replay_buffer=replay_buffer,
     )
@@ -106,8 +107,8 @@ def main(cfg: DictConfig):
     model_trainer = models.ModelTrainer(dynamics_model, optim_lr=1e-3, weight_decay=5e-5)
 
     # Create visualization objects
-    fig, axs = plt.subplots(1, 2, figsize=(14, 3.75), gridspec_kw={"width_ratios": [1, 1]})
-    ax_text = axs[0].text(300, 50, "")
+    #fig, axs = plt.subplots(1, 2, figsize=(14, 3.75), gridspec_kw={"width_ratios": [1, 1]})
+    #ax_text = axs[0].text(300, 50, "")
 
     #Set up logger
     now = datetime.now()
@@ -135,7 +136,7 @@ def main(cfg: DictConfig):
         done = False
         total_reward = 0.0
         steps_trial = 0
-        update_axes(axs, env.render(mode="rgb_array"), ax_text, trial, steps_trial, all_rewards)
+        #update_axes(axs, env.render(mode="rgb_array"), ax_text, trial, steps_trial, all_rewards)
         while not done:
             # --------------- Model Training -----------------
             if steps_trial == 0:
@@ -158,17 +159,13 @@ def main(cfg: DictConfig):
                     dataset_train, dataset_val=dataset_val, num_epochs=cfg.dynamics_model.num_epochs, patience=cfg.dynamics_model.patience, callback=train_callback)
 
                 #check if its time to create a new morphology, mod 5?
-                if trial % cfg.gen_len ==0:
-                    agent.morph_again()
-
-
-
-
+                """if trial % cfg.gen_len ==0:
+                    agent.morph_again()"""
 
             # --- Doing env step using the agent and adding to model dataset ---
             next_obs, reward, done, _ = common_util.morph_step_env_and_add_to_buffer(env, obs, agent, {}, replay_buffer)
 
-            update_axes(axs, env.render(mode="rgb_array"), ax_text, trial, steps_trial, all_rewards)
+            #update_axes(axs, env.render(mode="rgb_array"), ax_text, trial, steps_trial, all_rewards)
 
             obs = next_obs
             total_reward += reward

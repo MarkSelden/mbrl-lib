@@ -25,7 +25,7 @@ def PETS_cartpole_morph(act: torch.Tensor, next_obs: torch.Tensor) -> torch.Tens
     ang = np.array(next_obs[:,5])
     ang_vel = np.array(next_obs[:,6])
     ang = ang * -1 + np.pi/2
-    target = (0,5)
+    target = (0,1)
     hyp = 2 * length
     pole_edge  = np.array([hyp * np.cos(ang) + pos, hyp * np.sin(ang)])
     target_distance = np.sqrt((pole_edge[0] - target[0])**2 + (pole_edge[1] - target[1])**2)

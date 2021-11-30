@@ -107,6 +107,10 @@ def make_env(
             env = mbrl.env.mujoco_envs.HumanoidTruncatedObsEnv()
             term_fn = mbrl.env.termination_fns.ant
             reward_fn = None
+        elif cfg.overrides.env == "cartpole_continous_morph":
+            env = mbrl.env.cartpole_continuous.CartPoleMorphEnv()
+            term_fn =  mbrl.env.termination_fns.no_termination
+            reward_fn = None
         else:
             raise ValueError("Invalid environment string.")
         env = gym.wrappers.TimeLimit(
@@ -167,6 +171,8 @@ def make_env_from_str(env_name: str) -> gym.Env:
             env = mbrl.env.mujoco_envs.AntTruncatedObsEnv()
         elif env_name == "humanoid_truncated_obs":
             env = mbrl.env.mujoco_envs.HumanoidTruncatedObsEnv()
+        elif env_name == "cartpole_continuous_morph":
+            env = mbrl.env.cartpole_continuous.CartPoleMorphEnv()
         else:
             raise ValueError("Invalid environment string.")
         env = gym.wrappers.TimeLimit(env, max_episode_steps=1000)
@@ -211,8 +217,24 @@ class freeze_mujoco_env:
         elif "mbrl.third_party.dmc2gym" in self._env.env.__class__.__module__:
             self._enter_method = self._enter_dmcontrol
             self._exit_method = self._exit_dmcontrol
+        elif "mbrl.env.cartpole_continuous" in env.env.__class__.__module__:
+            self._enter_method = self._enter_cartpole
+            self._exit_method = self._exit_cartpole
+
         else:
             raise RuntimeError("Tried to freeze an unsupported environment.")
+
+    def _enter_cartpole(self):
+        self._init_state = self._env.env.get_state()
+        self._time_steps = self._env.env.time_step
+        self._elapsed_steps = self._env._elapsed_steps
+
+    def _exit_cartpole(self):
+        self._env.set_state(self._init_state)
+        self._env._elapsed_steps = self._elapsed_steps
+        self._env.env.time_step =  self._time_steps
+
+
 
     def _enter_mujoco_gym(self):
         self._init_state = (
@@ -273,6 +295,11 @@ def get_current_state(env: gym.wrappers.TimeLimit) -> Tuple:
         elapsed_steps = env._elapsed_steps
         step_count = env.env._env._step_count
         return state, elapsed_steps, step_count
+    elif "mbrl.env.cartpole_continuous" in env.env.__class__.__module__:
+        state = env.env.get_state()
+        elapsed_steps = env._elapsed_steps
+        return state, elapsed_steps
+
     else:
         raise NotImplementedError(
             "Only gym mujoco and dm_control environments supported."
@@ -299,6 +326,9 @@ def set_env_state(state: Tuple, env: gym.wrappers.TimeLimit):
             env.env._env.physics.set_state(state[0])
             env._elapsed_steps = state[1]
             env.env._env._step_count = state[2]
+    elif "mbrl.env.cartpole_continuous" in env.env.__class__.__module__:
+        env.set_state(state[0])
+        env._elapsed_steps = state[1]
     else:
         raise NotImplementedError(
             "Only gym mujoco and dm_control environments supported."
@@ -334,6 +364,7 @@ def rollout_mujoco_env(
     actions = []
     real_obses = []
     rewards = []
+
     with freeze_mujoco_env(cast(gym.wrappers.TimeLimit, env)):
         current_obs = initial_obs.copy()
         real_obses.append(current_obs)

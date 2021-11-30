@@ -148,7 +148,7 @@ if __name__ == "__main__":
                     current_state__,
                 )
 
-            best_value = [0]  # this is hacky, sorry
+            best_value = [-9999]  # this is hacky, sorry
 
             def compute_population_stats(_population, values, opt_step):
                 value_history[t, :, opt_step] = values.numpy()

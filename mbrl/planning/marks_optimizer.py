@@ -170,7 +170,7 @@ class OLOptimizerAgent(Agent):
         self.actions_to_use: List[np.ndarray] = []
         self.replan_freq = replan_freq
         self.verbose = verbose
-        self.new_morph = True
+        self.new_morph = False
 
     def set_trajectory_eval_fn(
             self, trajectory_eval_fn: mbrl.types.TrajectoryEvalFnType
