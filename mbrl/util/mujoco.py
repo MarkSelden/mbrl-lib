@@ -107,10 +107,10 @@ def make_env(
             env = mbrl.env.mujoco_envs.HumanoidTruncatedObsEnv()
             term_fn = mbrl.env.termination_fns.ant
             reward_fn = None
-        elif cfg.overrides.env == "cartpole_continous_morph":
+        elif cfg.overrides.env == "cartpole_continuous_morph":
             env = mbrl.env.cartpole_continuous.CartPoleMorphEnv()
             term_fn =  mbrl.env.termination_fns.no_termination
-            reward_fn = None
+            reward_fn = mbrl.env.reward_fns.PETS_cartpole_morph
         else:
             raise ValueError("Invalid environment string.")
         env = gym.wrappers.TimeLimit(

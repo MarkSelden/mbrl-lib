@@ -68,7 +68,7 @@ class CartPoleEnv(gym.Env):
         self.total_mass = self.masspole + self.masscart
         self.length = 2.5 # actually half the pole's length
         self.polemass_length = self.masspole * self.length
-        self.force_mag = 100.0
+        self.force_mag = 10.0
         self.tau = 0.02  # seconds between state updates
         self.kinematics_integrator = "euler"
         self.target = (0,5)
@@ -304,7 +304,7 @@ class CartPoleMorphEnv(gym.Env):
         self.total_mass = self.masspole + self.masscart
         self.length = 1 # actually half the pole's length
         self.polemass_length = self.masspole * self.length
-        self.force_mag = 100
+        self.force_mag = 10
         self.tau = 0.02  # seconds between state updates
         self.kinematics_integrator = "euler"
 

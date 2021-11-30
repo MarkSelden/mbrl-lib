@@ -70,7 +70,18 @@ class Visualizer:
 
         self.agent: mbrl.planning.Agent
         if agent_dir is None:
-            self.agent = mbrl.planning.RandomAgent(self.env)
+
+            #agent = mbrl.planning.RandomAgent(self.env)
+            agent_cfg = self.cfg
+            if (
+                agent_cfg.algorithm.agent._target_
+                == "mbrl.planning.TrajectoryOptimizerAgent"
+            ):
+                self.agent = mbrl.planning.create_trajectory_optim_agent_for_model(
+                    self.model_env,
+                    agent_cfg.algorithm.agent,
+                    num_particles=agent_cfg.algorithm.num_particles,
+                )
         else:
             agent_cfg = mbrl.util.common.load_hydra_cfg(agent_dir)
             if (
