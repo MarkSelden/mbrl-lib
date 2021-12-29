@@ -10,9 +10,9 @@ import mbrl.algorithms.pets as pets
 
 @hydra.main(config_path="mbrl/examples/conf", config_name="main")
 def run(cfg: omegaconf.DictConfig):
-    env = mbrl.env.cartpole_continuous.CartPoleMorphEnv()
+    env = mbrl.env.mujoco_envs.CartPoleEnv()
     term_fn = mbrl.env.termination_fns.no_termination
-    reward_fn = mbrl.env.reward_fns.PETS_cartpole_morph
+    reward_fn = None
     cfg.device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
     np.random.seed(cfg.seed)
     torch.manual_seed(cfg.seed)
