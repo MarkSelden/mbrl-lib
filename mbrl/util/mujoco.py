@@ -95,6 +95,11 @@ def make_env(
             env = mbrl.env.mujoco_envs.Reacher3DEnv()
             term_fn = mbrl.env.termination_fns.no_termination
             reward_fn = None
+        elif cfg.overrides.env == "cartpole_pets_version":
+            env = mbrl.env.mujoco_envs.CartPoleEnv()
+            term_fn = mbrl.env.termination_fns.no_termination
+            reward_fn = mbrl.env.reward_fns.cartpole_pets
+
         elif cfg.overrides.env == "pets_pusher":
             env = mbrl.env.mujoco_envs.PusherEnv()
             term_fn = mbrl.env.termination_fns.no_termination
@@ -110,7 +115,8 @@ def make_env(
         elif cfg.overrides.env == "cartpole_continuous_morph":
             env = mbrl.env.cartpole_continuous.CartPoleMorphEnv()
             term_fn =  mbrl.env.termination_fns.no_termination
-            reward_fn = mbrl.env.reward_fns.PETS_cartpole_morph
+            #reward_fn = mbrl.env.reward_fns.PETS_cartpole_morph
+            reward_fn = None
         else:
             raise ValueError("Invalid environment string.")
         env = gym.wrappers.TimeLimit(
@@ -173,6 +179,8 @@ def make_env_from_str(env_name: str) -> gym.Env:
             env = mbrl.env.mujoco_envs.HumanoidTruncatedObsEnv()
         elif env_name == "cartpole_continuous_morph":
             env = mbrl.env.cartpole_continuous.CartPoleMorphEnv()
+        elif env_name == "pets_cartpole":
+            env = mbrl.env.mujoco_envs.CartPoleEnv()
         else:
             raise ValueError("Invalid environment string.")
         env = gym.wrappers.TimeLimit(env, max_episode_steps=1000)

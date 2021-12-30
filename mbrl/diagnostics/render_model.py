@@ -58,7 +58,7 @@ class Agent_Renderer():
 
 
         # Set up recording
-        self.vis_path = self.exp_path / "render"
+        #self.vis_path = self.exp_path / "render"
 
 
     def run_exp(self):
