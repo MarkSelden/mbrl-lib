@@ -9,7 +9,7 @@ import mbrl.env.reward_fns
 import mbrl.algorithms.pets as pets
 
 
-@hydra.main(config_path="mbrl/examples/conf", config_name="main")
+@hydra.main(config_path="exp/conf", config_name="main")
 def run(cfg: omegaconf.DictConfig):
     env = mbrl.env.mujoco_envs.CartPoleEnv()
     term_fn = mbrl.env.termination_fns.no_termination
