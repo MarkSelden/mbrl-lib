@@ -1,0 +1,67 @@
+# dynamics model configuration
+seed: 1
+gen_len: 5
+dynamics_model:
+    num_epochs: 5
+    patience: 2
+    model:
+        _target_: mbrl.models.GaussianMLP
+        device: ???
+        num_layers: 3
+        ensemble_size: 7
+        hid_size: 200
+        use_silu: True
+        in_size: ???
+        out_size: ???
+        deterministic: False
+        propagation_method: fixed_model
+
+
+# options for training the dynamics model
+algorithm:
+    learned_rewards: False
+    target_is_delta: True
+    normalize: False
+
+# these are experiment specific options
+overrides:
+    trial_length: ???
+    num_steps: ???
+    model_batch_size: 1
+    validation_ratio: 0.05
+    seed: 0
+agent:
+    _target_: mbrl.planning.OLOptimizerAgent
+    planning_horizon: 15
+    replan_freq: 1
+    verbose: False
+    action_lb: ???
+    action_ub: ???
+    environment_params_lb: ???
+    environment_params_ub: ???
+    initial_planning_horizon: 15
+
+    # this is the optimizer to generate and choose a trajectory
+    ol_optimizer_cfg:
+        _target_: mbrl.planning.MorphCEMOptimizer
+        num_iterations: 5
+        elite_ratio: 0.1
+        population_size: 210
+        alpha: 0.1
+        device: ???
+        lower_bound: ???
+        upper_bound: ???
+        return_mean_elites: True
+
+
+    il_optimizer_cfg:
+        _target_: mbrl.planning.CEMOptimizer
+        num_iterations: 5
+        elite_ratio: 0.1
+        population_size: 210
+        alpha: 0.1
+        device: ???
+        lower_bound: ???
+        upper_bound: ???
+        return_mean_elites: True
+

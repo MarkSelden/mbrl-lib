@@ -79,3 +79,4 @@ class CartPoleEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         v = self.viewer
         v.cam.trackbodyid = 0
         v.cam.distance = self.model.stat.extent
+

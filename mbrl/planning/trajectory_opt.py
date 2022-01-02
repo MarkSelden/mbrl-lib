@@ -89,6 +89,7 @@ class CEMOptimizer(Optimizer):
         self.elite_num = np.ceil(self.population_size * self.elite_ratio).astype(
             np.int32
         )
+        # currently breaks here, from mis-processing the arrays. Could switch to add the
         self.lower_bound = torch.tensor(lower_bound, device=device, dtype=torch.float32)
         self.upper_bound = torch.tensor(upper_bound, device=device, dtype=torch.float32)
         self.alpha = alpha
@@ -186,6 +187,7 @@ class CEMOptimizer(Optimizer):
                 best_solution = population[elite_idx[0]].clone()
 
         return mu if self.return_mean_elites else best_solution
+
 
 
 class MPPIOptimizer(Optimizer):
@@ -309,7 +311,6 @@ class MPPIOptimizer(Optimizer):
             self.mean = torch.sum(weighted_actions, dim=0) / norm
 
         return self.mean.clone()
-
 
 class ICEMOptimizer(Optimizer):
     """Implements the Improved Cross-Entropy Method (iCEM) optimization algorithm.
@@ -487,6 +488,7 @@ class ICEMOptimizer(Optimizer):
         return mu if self.return_mean_elites else best_solution
 
 
+
 class TrajectoryOptimizer:
     """Class for using generic optimizers on trajectory optimization problems.
 
@@ -522,6 +524,7 @@ class TrajectoryOptimizer:
         replan_freq: int = 1,
         keep_last_solution: bool = True,
     ):
+        # puts the array in a list of arrays
         optimizer_cfg.lower_bound = np.tile(action_lb, (planning_horizon, 1)).tolist()
         optimizer_cfg.upper_bound = np.tile(action_ub, (planning_horizon, 1)).tolist()
         self.optimizer: Optimizer = hydra.utils.instantiate(optimizer_cfg)
@@ -555,6 +558,7 @@ class TrajectoryOptimizer:
         Returns:
             (tuple of np.ndarray and float): the best action sequence.
         """
+
         best_solution = self.optimizer.optimize(
             trajectory_eval_fn,
             x0=self.previous_solution,
@@ -570,6 +574,7 @@ class TrajectoryOptimizer:
     def reset(self):
         """Resets the previous solution cache to the initial solution."""
         self.previous_solution = self.initial_solution.clone()
+
 
 
 class TrajectoryOptimizerAgent(Agent):
@@ -716,6 +721,11 @@ class TrajectoryOptimizerAgent(Agent):
         return plan
 
 
+
+
+
+
+
 def create_trajectory_optim_agent_for_model(
     model_env: mbrl.models.ModelEnv,
     agent_cfg: omegaconf.DictConfig,
@@ -738,6 +748,7 @@ def create_trajectory_optim_agent_for_model(
 
     """
     complete_agent_cfg(model_env, agent_cfg)
+
     agent = hydra.utils.instantiate(agent_cfg)
 
     def trajectory_eval_fn(initial_state, action_sequences):

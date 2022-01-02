@@ -3,7 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 import torch
-
+import numpy as np
 from . import termination_fns
 
 
@@ -11,6 +11,31 @@ def cartpole(act: torch.Tensor, next_obs: torch.Tensor) -> torch.Tensor:
     assert len(next_obs.shape) == len(act.shape) == 2
 
     return (~termination_fns.cartpole(act, next_obs)).float().view(-1, 1)
+
+#remove the static obs from the termination argument
+def PETS_cartpole_morph(act: torch.Tensor, next_obs: torch.Tensor) -> torch.Tensor:
+    # calculate the distance between the point we set and the
+    dev = act.device
+    if dev != 'cpu':
+        next_obs = next_obs.cpu()
+        act = act.cpu()
+    length = np.array(next_obs[:, 2])
+    pos = np.array(next_obs[:,3])
+    vel = np.array(next_obs[:,4])
+    ang = np.array(next_obs[:,5])
+    ang_vel = np.array(next_obs[:,6])
+    ang = ang * -1 + np.pi/2
+    target = (0,1)
+    hyp = 2 * length
+    pole_edge  = np.array([hyp * np.cos(ang) + pos, hyp * np.sin(ang)])
+    target_distance = np.sqrt((pole_edge[0] - target[0])**2 + (pole_edge[1] - target[1])**2)
+    reward = target_distance * -1 + (-0.01 * np.array(act).flatten()**2)
+    return torch.tensor(np.reshape(reward, newshape=(len(reward),1)), device=dev)
+
+def cartpole_morph(act: torch.Tensor, next_obs: torch.Tensor) -> torch.Tensor:
+    assert len(next_obs.shape) == len(act.shape) == 2
+
+    return (~termination_fns.cartpole_morph(act, next_obs)).float().view(-1, 1)
 
 
 def cartpole_pets(act: torch.Tensor, next_obs: torch.Tensor) -> torch.Tensor:

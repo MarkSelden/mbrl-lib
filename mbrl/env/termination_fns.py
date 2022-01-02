@@ -43,6 +43,12 @@ def cartpole(act: torch.Tensor, next_obs: torch.Tensor) -> torch.Tensor:
     done = done[:, None]
     return done
 
+def cartpole_morph(act: torch.Tensor, next_obs: torch.tensor) -> torch.Tensor:
+    return cartpole(act, next_obs[:, 3:])
+
+def PETS_cartpole_morph(act: torch.Tensor, next_obs: torch.tensor) -> torch.Tensor:
+    return torch.zeros(len(act))
+
 
 def inverted_pendulum(act: torch.Tensor, next_obs: torch.Tensor) -> torch.Tensor:
     assert len(next_obs.shape) == 2

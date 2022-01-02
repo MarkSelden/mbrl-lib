@@ -54,6 +54,7 @@ class FreezeMujoco(Freeze):
             raise RuntimeError("Tried to freeze an unsupported environment.")
 
     def __enter__(self):
+
         self._init_state = (
             self._env.env.data.qpos.ravel().copy(),
             self._env.env.data.qvel.ravel().copy(),
@@ -122,6 +123,7 @@ class MujocoEnvHandler(EnvHandler):
         )
         elapsed_steps = env._elapsed_steps
         return state, elapsed_steps
+
 
     @staticmethod
     def set_env_state(state: Tuple, env: gym.wrappers.TimeLimit):
