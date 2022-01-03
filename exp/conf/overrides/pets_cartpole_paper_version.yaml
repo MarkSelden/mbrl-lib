@@ -1,6 +1,6 @@
 # @package _group_
 env: "cartpole_pets_version"
-obs_process_fn: mbrl.env.pets_cartpole.CartPoleEnv.preprocess_fn
+#obs_process_fn: mbrl.env.pets_cartpole.CartPoleEnv.preprocess_fn
 learned_rewards: false
 trial_length: 200
 num_steps: 10000
