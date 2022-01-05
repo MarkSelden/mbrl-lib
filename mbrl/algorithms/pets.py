@@ -125,7 +125,7 @@ def train(
                 print(f"Step {env_steps}: Reward {reward:.3f}.")
 
             #Added by mark.
-            if steps_trial >= cfg.trial_length:
+            if steps_trial >= cfg.overrides.trial_length:
                 done = True
 
         if logger is not None:
