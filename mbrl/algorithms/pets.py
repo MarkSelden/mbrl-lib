@@ -124,6 +124,10 @@ def train(
             if debug_mode:
                 print(f"Step {env_steps}: Reward {reward:.3f}.")
 
+            #Added by mark.
+            if steps_trial >= cfg.trial_length:
+                done = True
+
         if logger is not None:
             logger.log_data(
                 mbrl.constants.RESULTS_LOG_NAME,
