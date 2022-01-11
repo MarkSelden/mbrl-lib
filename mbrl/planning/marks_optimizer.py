@@ -452,7 +452,7 @@ def create_morph_trajectory_optim_agent_for_model(
         for conditions in env_params:
             initial_state = conditions.tolist() + obs[len(conditions):].tolist()
             init_states.append(initial_state)
-        return model_env.evaluate_parameterized_action_sequences(action_sequences, initial_states=torch.Tensor(init_states), num_particles=num_particles)
+        return model_env.evaluate_parameterized_action_sequences(action_sequences, initial_states=np.array(init_states), num_particles=num_particles)
 
     def flex_eval_func(*args):
         if len([*args]) == 3:

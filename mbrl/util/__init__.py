@@ -89,7 +89,7 @@ def create_handler_from_str(env_name: str):
         from mbrl.util.pybullet import PybulletEnvHandler
 
         return PybulletEnvHandler()
-    elif "gym___" in env_name:
+    elif "gym___" in env_name or "pets" in env_name:
         from mbrl.util.mujoco import MujocoEnvHandler
 
         return MujocoEnvHandler()

@@ -62,6 +62,7 @@ class ModelEnv:
             self._rng = torch.Generator(device=self.device)
         self._return_as_np = True
 
+    #Todo Potential error source
     def reset(
         self, initial_obs_batch: np.ndarray, return_as_np: bool = True
     ) -> Dict[str, torch.Tensor]:
@@ -145,7 +146,6 @@ class ModelEnv:
     def render(self, mode="human"):
         pass
 
-    #TODO: THIS FUNCTION WAS OVERWRITTEN BY MERGE
     def evaluate_action_sequences(
         self,
         action_sequences: torch.Tensor,
@@ -196,37 +196,35 @@ class ModelEnv:
 
 
     def evaluate_parameterized_action_sequences(self, action_sequences: torch.Tensor,
-        initial_states: torch.Tensor,
+        initial_states: np.ndarray,
         num_particles: int,
         ) -> torch.Tensor :
-        assert (
-                len(action_sequences.shape) == 3
-        )  # population_size, horizon, action_shape
-        assert(
-            len(initial_states.shape) == 2
-        ) #Population_size, shape
-        population_size, horizon, action_dim = action_sequences.shape
+        with torch.no_grad():
+            assert (
+                    len(action_sequences.shape) == 3
+            )  # population_size, horizon, action_shape
+            assert(
+                len(initial_states.shape) == 2
+            ) #Population_size, shape
+            population_size, horizon, action_dim = action_sequences.shape
 
-        #maybe need to flatten the initial states, they expect one state they are getting different one for each in the population
-        initial_obs_batch = torch.repeat_interleave(
-            initial_states, num_particles, dim=0
-        )
+            #maybe need to flatten the initial states, they expect one state they are getting different one for each in the population
+            initial_obs_batch = np.repeat( initial_states, num_particles, axis=0)
 
+            model_state = self.reset(initial_obs_batch, return_as_np=False)
+            batch_size = initial_obs_batch.shape[0]
+            total_rewards = torch.zeros(batch_size, 1).to(self.device)
+            terminated = torch.zeros(batch_size, 1, dtype=bool).to(self.device)
+            for time_step in range(horizon):
+                actions_for_step = action_sequences[:, time_step, :]
+                action_batch = torch.repeat_interleave(
+                    actions_for_step, num_particles, dim=0
+                )
+                _, rewards, dones, model_state = self.step(action_batch,model_state, sample=True)
+                rewards[terminated] = 0
+                terminated |= dones
+                total_rewards += rewards
 
-        self.reset(initial_obs_batch.numpy(), return_as_np=False)
-        batch_size = initial_obs_batch.shape[0]
-        total_rewards = torch.zeros(batch_size, 1).to(self.device)
-        terminated = torch.zeros(batch_size, 1, dtype=bool).to(self.device)
-        for time_step in range(horizon):
-            actions_for_step = action_sequences[:, time_step, :]
-            action_batch = torch.repeat_interleave(
-                actions_for_step, num_particles, dim=0
-            )
-            _, rewards, dones, _ = self.step(action_batch, sample=True)
-            rewards[terminated] = 0
-            terminated |= dones
-            total_rewards += rewards
-
-        total_rewards = total_rewards.reshape(-1, num_particles)
-        return total_rewards.mean(dim=1)
+            total_rewards = total_rewards.reshape(-1, num_particles)
+            return total_rewards.mean(dim=1)
 
