@@ -115,8 +115,8 @@ def train(
                     replay_buffer,
                     work_dir=work_dir,
                 )
-            if steps_trial == 0 and current_trial % cfg.algorithm.gen_len == 0:
-                agent.morph_again()
+           # if steps_trial == 0 and current_trial % cfg.algorithm.gen_len == 0:
+               # agent.morph_again()
 
             # --- Doing env step using the agent and adding to model dataset ---
             next_obs, reward, done, _ = mbrl.util.common.morph_step_env_and_add_to_buffer(

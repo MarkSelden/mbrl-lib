@@ -14,9 +14,9 @@ class CartPoleMorphEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         utils.EzPickle.__init__(self)
         self.dir_path = os.path.dirname(os.path.realpath(__file__))
         self.pole_length = 0
-        initial_pole_length = [np.random.rand() * 5]
+       # initial_pole_length = [np.random.rand() * 5]
         self.asset_file = "%s/assets/cartpole_morph.xml" % self.dir_path
-        self.set_exp_params(initial_pole_length)
+       # self.set_exp_params(initial_pole_length)
         self.exp_param_space = spaces.Box(np.array([0.001]), np.array([20]))
         mujoco_env.MujocoEnv.__init__(self, self.asset_file, 2)
 
