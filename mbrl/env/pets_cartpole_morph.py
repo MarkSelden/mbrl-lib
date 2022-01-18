@@ -8,12 +8,12 @@ import xmltodict
 
 
 class CartPoleMorphEnv(mujoco_env.MujocoEnv, utils.EzPickle):
-    TARGET = 3
+    TARGET = 0.6
 
     def __init__(self):
         utils.EzPickle.__init__(self)
         self.dir_path = os.path.dirname(os.path.realpath(__file__))
-        self.pole_length = 0
+        self.pole_length = 0.6
        # initial_pole_length = [np.random.rand() * 5]
         self.asset_file = "%s/assets/cartpole_morph.xml" % self.dir_path
        # self.set_exp_params(initial_pole_length)
