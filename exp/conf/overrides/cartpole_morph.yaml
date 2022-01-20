@@ -1,7 +1,7 @@
 # @package _group_
 env: "pets_cartpole_morph"
 #obs_process_fn: mbrl.env.pets_cartpole.CartPoleEnv.preprocess_fn
-learned_rewards: false
+learned_rewards: true
 trial_length: 200
 num_steps: 60000
 

@@ -13,7 +13,8 @@ import mbrl.algorithms.pets_morph as pets_morph
 def run(cfg: omegaconf.DictConfig):
     env = mbrl.env.pets_cartpole_morph.CartPoleMorphEnv()
     term_fn = mbrl.env.termination_fns.no_termination
-    reward_fn = mbrl.env.reward_fns.cartpole_pets_morph
+    #reward_fn = mbrl.env.reward_fns.cartpole_pets_morph
+    reward_fn = None
     cfg.device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
     cfg.algorithm.agent.ol_optimizer_cfg.device = cfg.device
     cfg.algorithm.agent.il_optimizer_cfg.device = cfg.device
