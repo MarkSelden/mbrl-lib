@@ -52,9 +52,10 @@ def cartpole_pets(act: torch.Tensor, next_obs: torch.Tensor) -> torch.Tensor:
 def cartpole_pets_morph(act: torch.Tensor, next_obs: torch.Tensor) -> torch.Tensor:
     assert len(next_obs.shape) == len(act.shape) == 2
     goal_pos = torch.tensor([0.0, 0.6]).to(next_obs.device)
+    pole_len = next_obs[:, :1]
     x0 = next_obs[:, 1:2]
     theta = next_obs[:, 2:3]
-    ee_pos = torch.cat([x0 - 0.6 * theta.sin(), -0.6 * theta.cos()], dim=1)
+    ee_pos = torch.cat([x0 - pole_len * theta.sin(), -pole_len * theta.cos()], dim=1)
     obs_cost = torch.exp(-torch.sum((ee_pos - goal_pos) ** 2, dim=1) / (0.6 ** 2))
     act_cost = -0.01 * torch.sum(act ** 2, dim=1)
     return (obs_cost + act_cost).view(-1, 1)
