@@ -129,7 +129,7 @@ def train(
             env_steps += 1
 
             if debug_mode:
-                print(f"Step {env_steps}: Reward {reward:.3f}.")
+                print(f"Step {env_steps}: Reward {reward:.3f} length: {env.pole_length}.")
 
             #Added by mark.
             if steps_trial >= cfg.overrides.trial_length:
@@ -138,11 +138,11 @@ def train(
         if logger is not None:
             logger.log_data(
                 mbrl.constants.RESULTS_LOG_NAME,
-                {"env_step": env_steps, "episode_reward": total_reward},
+                {"env_step": env_steps, "episode_reward": total_reward, "pole_length": env.pole_length}, #this will have to be changed for future environments with variables design params.
             )
         current_trial += 1
         if debug_mode:
-            print(f"Trial: {current_trial }, reward: {total_reward}.")
+            print(f"Trial: {current_trial }, reward: {total_reward}, length: {env.pole_length}")
 
         max_total_reward = max(max_total_reward, total_reward)
 
