@@ -3,7 +3,7 @@ env: "pets_cartpole_morph"
 #obs_process_fn: mbrl.env.pets_cartpole.CartPoleEnv.preprocess_fn
 learned_rewards: true
 trial_length: 200
-num_steps: 60000
+num_steps: 1000000
 
 num_elites: 5
 model_lr: 1e-4

@@ -334,6 +334,8 @@ class MorphCEMOptimizer(Optimizer):
         self.return_mean_elites = return_mean_elites
         self.device = device
 
+
+    #could potentially refactor much of this to match the regular optimizer. 
     def optimize(
         self,
         obj_fun: Callable[[torch.Tensor], torch.Tensor],
