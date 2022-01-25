@@ -115,7 +115,7 @@ def train(
                     replay_buffer,
                     work_dir=work_dir,
                 )
-            if steps_trial != 0 and current_trial % cfg.algorithm.gen_len == 0:
+            if steps_trial == 0 and current_trial % cfg.algorithm.gen_len == 0 and current_trial != 0:
                 agent.morph_again()
 
             # --- Doing env step using the agent and adding to model dataset ---
